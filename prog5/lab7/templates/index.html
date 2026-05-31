@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Observer</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const socket = io();
+            let clientId = null;
+
+            // Подключение
+            socket.on('connected', (data) => {
+                clientId = data.id;
+                document.getElementById('client-id').innerText = clientId;
+            });
+
+            // Уведомления о курсах валют
+            socket.on('update', (data) => {
+                const rates = data.rates;
+                const ratesList = document.getElementById('rates');
+                ratesList.innerHTML = '';
+                for (const [key, value] of Object.entries(rates)) {
+                    const li = document.createElement('li');
+                    li.textContent = `${key}: ${value.Value} RUB`;
+                    ratesList.appendChild(li);
+                }
+            });
+
+            // Подписка на валюты
+            document.getElementById('subscribe-btn').addEventListener('click', () => {
+                const currencies = document.getElementById('currencies').value.split(',').map(code => code.trim());
+                socket.emit('subscribe', { currencies });
+                alert(`Subscribed to: ${currencies.join(', ')}`);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Currency Rates Observer</h1>
+    <p>Ваш ID клиента: <span id="client-id">...</span></p>
+
+    <h2>Подписка на курсы валют</h2>
+    <p>Введите коды валют через запятую (например, USD, EUR):</p>
+    <input type="text" id="currencies" placeholder="USD, EUR">
+    <button id="subscribe-btn">Подписаться</button>
+
+    <h2>Курсы валют</h2>
+    <ul id="rates"></ul>
+</body>
+</html>
